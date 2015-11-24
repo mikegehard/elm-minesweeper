@@ -2,9 +2,15 @@
 
 This is my attempt at implementing the Minesweeper game in Elm.
 
-## Building
+## Prerequisites
 
-`./build`
+elm 0.16
+
+## Building
+```
+$ elm package install
+$ ./build
+```
 
 ## Running in browser
 

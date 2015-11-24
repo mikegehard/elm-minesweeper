@@ -1,42 +1,14 @@
 module Minesweeper where
 
-import StartApp
-import Task exposing (Task)
-import Signal exposing (Signal, Address)
-import Effects exposing (Effects, Never)
-import Html exposing (Html)
+type alias Board = List Row
 
---
--- StartApp boilerplate
---
-app =
-  StartApp.start { init = init, view = view, update = update, inputs = [] }
+type alias Row = List Tile
 
-main : Signal Html
-main =
-  app.html
+type alias Tile = {
+  isMine: Bool
+}
 
-port tasks : Signal (Task Never ())
-port tasks =
-  app.tasks
+initialTile = {isMine = False}
 
---
--- My type declarations
---
-type alias Model = String
-
-type Action = NoOp
-
---
--- My functions
---
-init : (Model, Effects Action)
-init = ("Hello World", Effects.none)
-
-update : Action -> Model -> (Model, Effects Action)
-update action model =
-  case action of
-    NoOp -> (model, Effects.none)
-
-view : Address Action -> Model -> Html
-view address model = Html.text model
+createBoard: Int -> Board
+createBoard size = List.repeat size (List.repeat size initialTile)

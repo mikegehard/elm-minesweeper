@@ -24,17 +24,19 @@ port tasks =
   app.tasks
 
 type alias Model = {
-  difficulty: Maybe Difficulty,
+  status: Maybe Status,
   board: Maybe Board
 }
 
-initialModel = { board = Nothing, difficulty = Nothing }
+initialModel = { board = Nothing, status = Nothing }
 
 boardSize = 3
 
 type Action = NoOp | Click Tile Board | Select Difficulty
 
 type Difficulty = Beginner | Intermediate | Advanced
+
+type Status = Lost
 
 translateDifficulty: String -> Difficulty
 translateDifficulty optionValue =
@@ -43,6 +45,10 @@ translateDifficulty optionValue =
     "Intermediate" -> Intermediate
     "Advanced" -> Advanced
     _ -> Beginner
+
+endGame: Model -> Model
+endGame model =
+  {model | board = Nothing, status = Just Lost}
 
 init : (Model, Effects Action)
 init = (initialModel, Effects.none)
@@ -60,7 +66,10 @@ update action model =
         Advanced ->
           ({model | board = Just(createBoard 22 99)}, Effects.none)
     Click tile board ->
-      ({model | board = Just(Minesweeper.clickTile tile board)}, Effects.none)
+      if tile.isMine then
+        (endGame model, Effects.none)
+      else
+        ({model | board = Just(Minesweeper.clickTile tile board)}, Effects.none)
 
 view : Address Action -> Model -> Html
 view address model =
@@ -78,16 +87,19 @@ view address model =
         displayRow row = List.map displayTile row |> tr []
         tableHtml = Minesweeper.toGrid board |> List.map displayRow
       in
-
         table [] tableHtml
     Nothing ->
-      div [class "controls"]
-      [
-        select [on "change" targetValue (Signal.message address << Select << translateDifficulty)]
-        [
-          option [] [text "Select a difficulty..."],
-          option [] [text "Beginner"],
-          option [] [text "Intermediate"],
-          option [] [text "Advanced"]
-        ]
-      ]
+      case model.status of
+        Just status ->
+          h1 [] [text "Sorry you lost!!"]
+        Nothing ->
+          div [class "controls"]
+          [
+            select [on "change" targetValue (Signal.message address << Select << translateDifficulty)]
+            [
+              option [] [text "Select a difficulty..."],
+              option [] [text "Beginner"],
+              option [] [text "Intermediate"],
+              option [] [text "Advanced"]
+            ]
+          ]

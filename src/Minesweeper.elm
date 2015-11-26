@@ -3,7 +3,8 @@ module Minesweeper (
   Tile,
   createBoard,
   clickTile,
-  toGrid)
+  toGrid,
+  expose)
   where
 
 import Array exposing (Array, length)
@@ -23,6 +24,13 @@ newTile id = Tile id False False
 createBoard: Int -> Int -> Board
 createBoard size numberOfBombs =
   Array.initialize (size * size) newTile |> addBombs numberOfBombs
+
+expose: Board -> Board
+expose board =
+  let
+    exposeTile tile = {tile | isClicked = True}
+  in
+    Array.map exposeTile board
 
 addBombs: Int -> Board -> Board
 addBombs numberOfBombs board =

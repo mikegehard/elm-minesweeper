@@ -24,11 +24,11 @@ port tasks =
   app.tasks
 
 type alias Model = {
-  status: Maybe Status,
+  outcome: Maybe Outcome,
   board: Maybe Board
 }
 
-initialModel = { board = Nothing, status = Nothing }
+initialModel = { board = Nothing, outcome = Nothing }
 
 boardSize = 3
 
@@ -36,7 +36,7 @@ type Action = NoOp | Click Tile Board | Select Difficulty
 
 type Difficulty = Beginner | Intermediate | Advanced
 
-type Status = Lost
+type Outcome = Lost
 
 translateDifficulty: String -> Difficulty
 translateDifficulty optionValue =
@@ -46,9 +46,7 @@ translateDifficulty optionValue =
     "Advanced" -> Advanced
     _ -> Beginner
 
-endGame: Model -> Model
-endGame model =
-  {model | board = Nothing, status = Just Lost}
+
 
 init : (Model, Effects Action)
 init = (initialModel, Effects.none)
@@ -67,39 +65,45 @@ update action model =
           ({model | board = Just(createBoard 22 99)}, Effects.none)
     Click tile board ->
       if tile.isMine then
-        (endGame model, Effects.none)
+        ({model | board = Just(Minesweeper.expose board), outcome = Just(Lost)}, Effects.none)
       else
         ({model | board = Just(Minesweeper.clickTile tile board)}, Effects.none)
 
 view : Address Action -> Model -> Html
 view address model =
-  case model.board of
-    Just board ->
-      let
-        classFor tile = if tile.isClicked then
-            if tile.isMine then
-              "tile clicked mine"
-            else
-              "tile clicked"
-          else
-            "tile"
-        displayTile tile = td [class (classFor tile), onClick address (Click tile board)] []
-        displayRow row = List.map displayTile row |> tr []
-        tableHtml = Minesweeper.toGrid board |> List.map displayRow
-      in
-        table [] tableHtml
-    Nothing ->
-      case model.status of
-        Just status ->
-          h1 [] [text "Sorry you lost!!"]
-        Nothing ->
-          div [class "controls"]
-          [
-            select [on "change" targetValue (Signal.message address << Select << translateDifficulty)]
-            [
-              option [] [text "Select a difficulty..."],
-              option [] [text "Beginner"],
-              option [] [text "Intermediate"],
-              option [] [text "Advanced"]
-            ]
-          ]
+  let
+    classFor: Tile -> String
+    classFor tile =
+      if tile.isClicked then
+        if tile.isMine then
+          "tile clicked mine"
+        else
+          "tile clicked"
+      else
+        "tile"
+
+    displayTile: Board -> Tile -> Html
+    displayTile board tile = td [class (classFor tile), onClick address (Click tile board)] []
+
+    displayRow: Board -> List Tile -> Html
+    displayRow board row = List.map (displayTile board) row |> tr []
+
+    displayBoard: Maybe Board -> Maybe Html
+    -- displayBoard board = Maybe.map (\board -> Minesweeper.toGrid board |> List.map (displayRow board) |> table [])
+    displayBoard board = board |> Maybe.map (\board -> Minesweeper.toGrid board |> List.map (displayRow board) |> table [])
+
+    controlsHtml = div [class "controls"]
+      [
+        select [on "change" targetValue (Signal.message address << Select << translateDifficulty)]
+        [
+          option [] [text "Select a difficulty..."],
+          option [] [text "Beginner"],
+          option [] [text "Intermediate"],
+          option [] [text "Advanced"]
+        ]
+      ]
+
+    outcomeHtml = model.outcome |> Maybe.map (toString >> text) |> Maybe.withDefault (text "")
+    htmlElements = [Maybe.withDefault controlsHtml (displayBoard model.board)] ++ [outcomeHtml]
+  in
+    div [] htmlElements

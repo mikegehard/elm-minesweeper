@@ -53,11 +53,11 @@ view address model =
   let
     classFor: Tile -> String
     classFor tile =
-      if tile.isClicked then
+      if tile.isExposed then
         if tile.isMine then
-          "tile clicked mine"
+          "tile exposed mine"
         else
-          "tile clicked"
+          "tile exposed"
       else
         "tile"
 
@@ -85,7 +85,7 @@ view address model =
     toHtml outcome = div [class "outcome"] [outcome |> toString |> text]
 
     outcomeHtml = model.outcome |> Maybe.map toHtml |> Maybe.withDefault (text "")
-    
+
     boardHtml = displayBoard model.board
 
     htmlElements = [ boardHtml |> Maybe.withDefault controlsHtml ] ++ [outcomeHtml]

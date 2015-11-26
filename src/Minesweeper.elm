@@ -15,7 +15,7 @@ type alias Board = Array Tile
 type alias Tile = {
   id: Int,
   isMine: Bool,
-  isClicked: Bool
+  isExposed: Bool
 }
 
 newTile : Int -> Tile
@@ -28,7 +28,7 @@ createBoard size numberOfBombs =
 expose: Board -> Board
 expose board =
   let
-    exposeTile tile = {tile | isClicked = True}
+    exposeTile tile = {tile | isExposed = True}
   in
     Array.map exposeTile board
 
@@ -65,4 +65,4 @@ toGrid board =
     Array.toList board |> partition
 
 reveal: Tile -> Board -> Board
-reveal tile board = Array.set tile.id {tile | isClicked = True} board
+reveal tile board = Array.set tile.id {tile | isExposed = True} board

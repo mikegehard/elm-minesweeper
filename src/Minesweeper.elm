@@ -2,7 +2,7 @@ module Minesweeper (
   Board,
   Tile,
   createBoard,
-  clickTile,
+  reveal,
   toGrid,
   expose)
   where
@@ -64,5 +64,5 @@ toGrid board =
   in
     Array.toList board |> partition
 
-clickTile: Tile -> Board -> Board
-clickTile tile board = Array.set tile.id {tile | isClicked = True} board
+reveal: Tile -> Board -> Board
+reveal tile board = Array.set tile.id {tile | isClicked = True} board

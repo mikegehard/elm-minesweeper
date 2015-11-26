@@ -7,7 +7,8 @@ import Effects exposing (Effects, Never)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Minesweeper exposing (Board, Tile, createBoard)
+import Minesweeper exposing (Board, Tile, createBoard, reveal, expose, toGrid)
+import Game exposing (Outcome, Difficulty, translateDifficulty)
 
 --
 -- StartApp boilerplate
@@ -28,23 +29,9 @@ type alias Model = {
   board: Maybe Board
 }
 
-initialModel = { board = Nothing, outcome = Nothing }
+initialModel = Game.initial
 
 type Action = NoOp | Click Tile Board | Select Difficulty
-
-type Difficulty = Beginner | Intermediate | Advanced
-
-type Outcome = Lost
-
-translateDifficulty: String -> Difficulty
-translateDifficulty optionValue =
-  case optionValue of
-    "Beginner" -> Beginner
-    "Intermediate" -> Intermediate
-    "Advanced" -> Advanced
-    _ -> Beginner
-
-
 
 init : (Model, Effects Action)
 init = (initialModel, Effects.none)
@@ -54,18 +41,12 @@ update action model =
   case action of
     NoOp -> (model, Effects.none)
     Select difficulty ->
-      case difficulty of
-        Beginner ->
-          ({model | board = Just(createBoard 9 10)}, Effects.none)
-        Intermediate ->
-          ({model | board = Just(createBoard 16 40)}, Effects.none)
-        Advanced ->
-          ({model | board = Just(createBoard 22 99)}, Effects.none)
+      ({model | board = Just(Game.boardFor difficulty)}, Effects.none)
     Click tile board ->
       if tile.isMine then
-        ({model | board = Just(Minesweeper.expose board), outcome = Just(Lost)}, Effects.none)
+        ({model | board = Just(expose board), outcome = Just Game.Lost}, Effects.none)
       else
-        ({model | board = Just(Minesweeper.clickTile tile board)}, Effects.none)
+        ({model | board = Just(reveal tile board)}, Effects.none)
 
 view : Address Action -> Model -> Html
 view address model =
@@ -84,11 +65,10 @@ view address model =
     displayTile board tile = td [class (classFor tile), onClick address (Click tile board)] []
 
     displayRow: Board -> List Tile -> Html
-    displayRow board row = List.map (displayTile board) row |> tr []
+    displayRow board row = row |> List.map (displayTile board) |> tr []
 
     displayBoard: Maybe Board -> Maybe Html
-    -- displayBoard board = Maybe.map (\board -> Minesweeper.toGrid board |> List.map (displayRow board) |> table [])
-    displayBoard board = board |> Maybe.map (\board -> Minesweeper.toGrid board |> List.map (displayRow board) |> table [])
+    displayBoard board = board |> Maybe.map (\board -> toGrid board |> List.map (displayRow board) |> table [])
 
     controlsHtml = div [class "controls"]
       [
@@ -101,7 +81,13 @@ view address model =
         ]
       ]
 
-    outcomeHtml = model.outcome |> Maybe.map (toString >> text) |> Maybe.withDefault (text "")
-    htmlElements = [Maybe.withDefault controlsHtml (displayBoard model.board)] ++ [outcomeHtml]
+    toHtml: Outcome -> Html
+    toHtml = toString >> text
+
+    outcomeHtml = model.outcome |> Maybe.map toHtml |> Maybe.withDefault (text "")
+    
+    boardHtml = displayBoard model.board
+
+    htmlElements = [ boardHtml |> Maybe.withDefault controlsHtml ] ++ [outcomeHtml]
   in
     div [] htmlElements

@@ -12,6 +12,14 @@ $ elm package install
 $ ./build
 ```
 
-## Running in browser
+## Publishing to GitHub pages
+
+`./publish`
+
+## Running in browser locally
 
 `open index.html`
+
+## Running application
+
+Head over to [http://mikegehard.github.io/elm-minesweeper/](http://mikegehard.github.io/elm-minesweeper/)

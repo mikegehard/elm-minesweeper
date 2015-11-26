@@ -82,7 +82,7 @@ view address model =
       ]
 
     toHtml: Outcome -> Html
-    toHtml = toString >> text
+    toHtml outcome = div [class "outcome"] [outcome |> toString |> text]
 
     outcomeHtml = model.outcome |> Maybe.map toHtml |> Maybe.withDefault (text "")
     

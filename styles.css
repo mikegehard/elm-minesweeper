@@ -11,3 +11,8 @@
 .mine {
   background-color: red;
 }
+
+.outcome {
+  color: orange;
+  font-size: 3em;
+}

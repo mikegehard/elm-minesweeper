@@ -3,3 +3,7 @@
   width: 2em;
   height: 2em;
 }
+
+.clicked {
+  background-color: red;
+}

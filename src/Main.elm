@@ -6,7 +6,8 @@ import Signal exposing (Signal, Address)
 import Effects exposing (Effects, Never)
 import Html exposing (Html, Attribute)
 import Html.Attributes exposing (..)
-import Minesweeper
+import Html.Events exposing (..)
+import Minesweeper exposing (Board, Tile, createBoard)
 
 --
 -- StartApp boilerplate
@@ -22,31 +23,25 @@ port tasks : Signal (Task Never ())
 port tasks =
   app.tasks
 
---
--- My type declarations
---
-
-type alias Model = Minesweeper.Board
-
 boardSize = 3
 
-type Action = NoOp
+type Action = NoOp | Click Tile
 
---
--- My functions
---
-init : (Model, Effects Action)
-init = (Minesweeper.createBoard boardSize, Effects.none)
+init : (Board, Effects Action)
+init = (createBoard boardSize, Effects.none)
 
-update : Action -> Model -> (Model, Effects Action)
-update action model =
+update : Action -> Board -> (Board, Effects Action)
+update action board =
   case action of
-    NoOp -> (model, Effects.none)
+    NoOp -> (board, Effects.none)
+    Click tile -> (Minesweeper.clickTile tile board, Effects.none)
 
-view : Address Action -> Model -> Html
-view address model =
+view : Address Action -> Board -> Html
+view address board =
   let
-    displayTile tile = Html.td [class "tile"] []
-    displayRow row = Html.tr [] (List.map displayTile row)
+    classFor tile = if tile.isClicked then "tile clicked" else "tile"
+    displayTile tile = Html.td [class (classFor tile), onClick address (Click tile)] []
+    displayRow row = List.map displayTile row |> Html.tr []
+    tableHtml = Minesweeper.toGrid board |> List.map displayRow
   in
-    Html.table [] (List.map displayRow model)
+    Html.table [] tableHtml

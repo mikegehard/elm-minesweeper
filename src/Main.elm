@@ -30,8 +30,6 @@ type alias Model = {
 
 initialModel = { board = Nothing, outcome = Nothing }
 
-boardSize = 3
-
 type Action = NoOp | Click Tile Board | Select Difficulty
 
 type Difficulty = Beginner | Intermediate | Advanced

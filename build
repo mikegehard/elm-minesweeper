@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
+set -e
+
 elm make --output target/elm.js src/Main.elm

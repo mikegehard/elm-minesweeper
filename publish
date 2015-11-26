@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 git checkout -b gh-pages
 ./build
 git add -f target/

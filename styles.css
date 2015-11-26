@@ -5,5 +5,9 @@
 }
 
 .clicked {
+  background-color: green;
+}
+
+.mine {
   background-color: red;
 }

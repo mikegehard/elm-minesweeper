@@ -1,6 +1,13 @@
-module Minesweeper where
+module Minesweeper (
+  Board,
+  Tile,
+  createBoard,
+  clickTile,
+  toGrid)
+  where
 
-import Array exposing (Array)
+import Array exposing (Array, length)
+import Random exposing (generate, initialSeed, int, list)
 
 type alias Board = Array Tile
 
@@ -11,13 +18,30 @@ type alias Tile = {
 }
 
 newTile : Int -> Tile
-newTile id = {
-  id = id,
-  isMine = False,
-  isClicked = False }
+newTile id = Tile id False False
 
-createBoard: Int -> Board
-createBoard size = Array.initialize (size * size) newTile
+createBoard: Int -> Int -> Board
+createBoard size numberOfBombs =
+  Array.initialize (size * size) newTile |> addBombs numberOfBombs
+
+addBombs: Int -> Board -> Board
+addBombs numberOfBombs board =
+  let
+    bombPositionGenerator = list numberOfBombs (int 0 (length board))
+    (bombPositions, _) = generate bombPositionGenerator (initialSeed 100)
+    insertBombs: List(Int) -> Board -> Board
+    insertBombs listOfPositions board =
+      case listOfPositions of
+        [] -> board
+        head::tail ->
+          let
+            currentTile = Array.get head board
+          in
+            case currentTile of
+              Just tile -> insertBombs tail (Array.set head {tile | isMine = True} board)
+              Nothing -> board
+  in
+    insertBombs bombPositions board
 
 toGrid: Board -> List(List Tile)
 toGrid board =

@@ -7,8 +7,9 @@ import Effects exposing (Effects, Never)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Minesweeper exposing (Board, Tile, createBoard, reveal, expose, toGrid)
+import Minesweeper exposing (Board, Tile, createBoard, reveal, expose, toGrid, markTile)
 import Game exposing (Outcome, Difficulty, translateDifficulty)
+import Json.Decode
 
 --
 -- StartApp boilerplate
@@ -31,7 +32,7 @@ type alias Model = {
 
 initialModel = Game.initial
 
-type Action = NoOp | Click Tile | Select Difficulty
+type Action = NoOp | Select Difficulty | Click Tile | Mark Tile
 
 init : (Model, Effects Action)
 init = (initialModel, Effects.none)
@@ -50,13 +51,19 @@ update action model =
           else
             ({model | board = Just(reveal tile board)}, Effects.none)
         Nothing -> (model, Effects.none)
+    Mark tile ->
+      case model.board of
+        Just board -> ({model | board = Just(markTile tile board)}, Effects.none)
+        Nothing -> (model, Effects.none)
 
 view : Address Action -> Model -> Html
 view address model =
   let
     classFor: Tile -> String
     classFor tile =
-      if tile.isExposed then
+      if tile.isMarked then
+        "tile marked"
+      else if tile.isExposed then
         if tile.isMine then
           "tile exposed mine"
         else
@@ -69,7 +76,8 @@ view address model =
       td
       [
         class (classFor tile),
-        onClick address (Click tile)
+        onClick address (Click tile),
+        onRightClick address (Mark tile)
       ]
       []
 
@@ -100,3 +108,6 @@ view address model =
     htmlElements = [ boardHtml |> Maybe.withDefault controlsHtml ] ++ [outcomeHtml]
   in
     div [] htmlElements
+
+onRightClick: Signal.Address a -> a -> Attribute
+onRightClick address message = onWithOptions "contextmenu" {defaultOptions | preventDefault = True} Json.Decode.value (\_ -> Signal.message address message)

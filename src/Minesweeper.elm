@@ -4,7 +4,8 @@ module Minesweeper (
   createBoard,
   reveal,
   toGrid,
-  expose)
+  expose,
+  markTile)
   where
 
 import Array exposing (Array, length)
@@ -15,11 +16,12 @@ type alias Board = Array Tile
 type alias Tile = {
   id: Int,
   isMine: Bool,
+  isMarked: Bool,
   isExposed: Bool
 }
 
 newTile : Int -> Tile
-newTile id = Tile id False False
+newTile id = Tile id False False False
 
 createBoard: Int -> Int -> Board
 createBoard size numberOfBombs =
@@ -66,3 +68,7 @@ toGrid board =
 
 reveal: Tile -> Board -> Board
 reveal tile board = Array.set tile.id {tile | isExposed = True} board
+
+markTile: Tile -> Board -> Board
+markTile tile board =
+  Array.set tile.id {tile | isMarked = True} board

@@ -12,6 +12,10 @@
   background-color: red;
 }
 
+.marked {
+  background-color: orange;
+}
+
 .outcome {
   color: orange;
   font-size: 3em;

@@ -31,7 +31,7 @@ type alias Model = {
 
 initialModel = Game.initial
 
-type Action = NoOp | Click Tile Board | Select Difficulty
+type Action = NoOp | Click Tile | Select Difficulty
 
 init : (Model, Effects Action)
 init = (initialModel, Effects.none)
@@ -42,11 +42,14 @@ update action model =
     NoOp -> (model, Effects.none)
     Select difficulty ->
       ({model | board = Just(Game.boardFor difficulty)}, Effects.none)
-    Click tile board ->
-      if tile.isMine then
-        ({model | board = Just(expose board), outcome = Just Game.Lost}, Effects.none)
-      else
-        ({model | board = Just(reveal tile board)}, Effects.none)
+    Click tile ->
+      case model.board of
+        Just board ->
+          if tile.isMine then
+            ({model | board = Just(expose board), outcome = Just Game.Lost}, Effects.none)
+          else
+            ({model | board = Just(reveal tile board)}, Effects.none)
+        Nothing -> (model, Effects.none)
 
 view : Address Action -> Model -> Html
 view address model =
@@ -62,7 +65,13 @@ view address model =
         "tile"
 
     displayTile: Board -> Tile -> Html
-    displayTile board tile = td [class (classFor tile), onClick address (Click tile board)] []
+    displayTile board tile =
+      td
+      [
+        class (classFor tile),
+        onClick address (Click tile)
+      ]
+      []
 
     displayRow: Board -> List Tile -> Html
     displayRow board row = row |> List.map (displayTile board) |> tr []

@@ -4,7 +4,7 @@ This is my attempt at implementing the Minesweeper game in Elm.
 
 ## Prerequisites
 
-[http://elm-lang.org/install](elm 0.16)
+[elm 0.16](http://elm-lang.org/install)
 
 ## Building
 ```

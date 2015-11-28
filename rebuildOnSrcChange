@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -e
+
+# This will pick up when files are added and will exit when files are removed.
+# See http://entrproject.org/ for details.
+
+while sleep 1; do
+ls src/*.elm | entr './build'
+done

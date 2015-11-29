@@ -19,9 +19,14 @@ type alias Board = {
 }
 
 create: Int -> Int -> Board
-create s numberOfMines = {
-  size = s,
-  tiles = Array.initialize (s * s) Minesweeper.Tile.new |> addMines numberOfMines |> addAdjacentMineValues s }
+create s numberOfMines =
+  {
+    size = s,
+    tiles =
+      Array.initialize (s * s) Minesweeper.Tile.new
+      |> addMines numberOfMines
+      |> addAdjacentMineValues
+  }
 
 toGrid: Board -> List(List Tile)
 toGrid board =
@@ -71,8 +76,8 @@ addMines numberOfMines tiles =
   in
     insertMines bombPositions tiles
 
-addAdjacentMineValues: Int -> Array Tile -> Array Tile
-addAdjacentMineValues boardSize tiles =
+addAdjacentMineValues: Array Tile -> Array Tile
+addAdjacentMineValues tiles =
   let
     populateAdjacentMines: Tile -> Tile
     populateAdjacentMines tile =
@@ -85,6 +90,12 @@ addAdjacentMineValues boardSize tiles =
     neighbors: Tile -> Array Tile
     neighbors tile =
       let
+        boardSize =
+          Array.length tiles
+          |> toFloat
+          |> sqrt
+          |> round
+
         isNWCorner tile = tile.id == 0
         isNECorner tile = tile.id == boardSize - 1
         isSWCorner tile = tile.id == (boardSize - 1) * boardSize
@@ -156,7 +167,8 @@ addAdjacentMineValues boardSize tiles =
               tile.id - boardSize - 1,
               tile.id - boardSize,
               tile.id - boardSize + 1,
-              tile.id - 1, tile.id + 1,
+              tile.id - 1,
+              tile.id + 1,
               tile.id + boardSize - 1,
               tile.id + boardSize,
               tile.id + boardSize + 1

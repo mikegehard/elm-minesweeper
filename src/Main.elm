@@ -69,8 +69,8 @@ view address model =
       else
         "tile"
 
-    displayTile: Board -> Tile -> Html
-    displayTile board tile =
+    displayTile: Tile -> Html
+    displayTile tile =
       td
       [
         class (classFor tile),
@@ -79,11 +79,11 @@ view address model =
       ]
       [ tile |> Minesweeper.Tile.textFor |> text]
 
-    displayRow: Board -> List Tile -> Html
-    displayRow board row = row |> List.map (displayTile board) |> tr []
+    displayRow: List Tile -> Html
+    displayRow row = row |> List.map displayTile |> tr []
 
     displayBoard: Maybe Board -> Maybe Html
-    displayBoard board = board |> Maybe.map (\board -> Minesweeper.Board.toGrid board |> List.map (displayRow board) |> table [])
+    displayBoard board = board |> Maybe.map (\board -> Minesweeper.Board.toGrid board |> List.map displayRow |> table [])
 
     controlsHtml = div [class "controls"]
       [

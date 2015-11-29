@@ -71,6 +71,12 @@ view address model =
       else
         "tile"
 
+    textFor tile =
+      if tile.isExposed && not tile.isMine then
+         toString tile.numberOfAdjacentMines
+      else
+        ""
+
     displayTile: Board -> Tile -> Html
     displayTile board tile =
       td
@@ -79,7 +85,7 @@ view address model =
         onClick address (Click tile),
         onRightClick address (Mark tile)
       ]
-      []
+      [ tile |> textFor |> text]
 
     displayRow: Board -> List Tile -> Html
     displayRow board row = row |> List.map (displayTile board) |> tr []

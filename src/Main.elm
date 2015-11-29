@@ -7,13 +7,11 @@ import Effects exposing (Effects, Never)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Minesweeper exposing (Board, Tile, createBoard, reveal, expose, toGrid, markTile)
+import Minesweeper.Board exposing (Board)
+import Minesweeper.Tile exposing (Tile)
 import Game exposing (Outcome, Difficulty, translateDifficulty)
 import Json.Decode
 
---
--- StartApp boilerplate
---
 app =
   StartApp.start { init = init, view = view, update = update, inputs = [] }
 
@@ -47,13 +45,13 @@ update action model =
       case model.board of
         Just board ->
           if tile.isMine then
-            ({model | board = Just(expose board), outcome = Just Game.Lost}, Effects.none)
+            ({model | board = Just(Minesweeper.Board.expose board), outcome = Just Game.Lost}, Effects.none)
           else
-            ({model | board = Just(reveal tile board)}, Effects.none)
+            ({model | board = Just(Minesweeper.Board.reveal tile board)}, Effects.none)
         Nothing -> (model, Effects.none)
     Mark tile ->
       case model.board of
-        Just board -> ({model | board = Just(markTile tile board)}, Effects.none)
+        Just board -> ({model | board = Just(Minesweeper.Board.mark tile board)}, Effects.none)
         Nothing -> (model, Effects.none)
 
 view : Address Action -> Model -> Html
@@ -71,12 +69,6 @@ view address model =
       else
         "tile"
 
-    textFor tile =
-      if tile.isExposed && not tile.isMine then
-         toString tile.numberOfAdjacentMines
-      else
-        ""
-
     displayTile: Board -> Tile -> Html
     displayTile board tile =
       td
@@ -85,13 +77,13 @@ view address model =
         onClick address (Click tile),
         onRightClick address (Mark tile)
       ]
-      [ tile |> textFor |> text]
+      [ tile |> Minesweeper.Tile.textFor |> text]
 
     displayRow: Board -> List Tile -> Html
     displayRow board row = row |> List.map (displayTile board) |> tr []
 
     displayBoard: Maybe Board -> Maybe Html
-    displayBoard board = board |> Maybe.map (\board -> toGrid board |> List.map (displayRow board) |> table [])
+    displayBoard board = board |> Maybe.map (\board -> Minesweeper.Board.toGrid board |> List.map (displayRow board) |> table [])
 
     controlsHtml = div [class "controls"]
       [

@@ -1,37 +1,39 @@
-module Minesweeper (
-  Board,
-  Tile,
-  createBoard,
-  reveal,
-  toGrid,
-  expose,
-  markTile)
+module Minesweeper.Board
+  (
+    Board,
+    create,
+    toGrid,
+    expose,
+    mark,
+    reveal
+  )
   where
 
-import Array exposing (Array, length)
+import Array exposing (Array)
+import Minesweeper.Tile exposing (Tile)
 import Random exposing (generate, initialSeed, int, list)
-import Debug
 
 type alias Board = {
   size: Int,
   tiles: Array Tile
 }
 
-type alias Tile = {
-  id: Int,
-  numberOfAdjacentMines: Int,
-  isMine: Bool,
-  isMarked: Bool,
-  isExposed: Bool
-}
-
-newTile : Int -> Tile
-newTile id = Tile id 0 False False False
-
-createBoard: Int -> Int -> Board
-createBoard s numberOfMines = {
+create: Int -> Int -> Board
+create s numberOfMines = {
   size = s,
-  tiles = Array.initialize (s * s) newTile |> addMines numberOfMines |> addAdjacentMineValues s }
+  tiles = Array.initialize (s * s) Minesweeper.Tile.new |> addMines numberOfMines |> addAdjacentMineValues s }
+
+toGrid: Board -> List(List Tile)
+toGrid board =
+  let
+    partition: List Tile -> List(List Tile)
+    partition list =
+      if List.length list == board.size then
+        [list]
+      else
+        [List.take board.size list] ++ (List.drop board.size list |> partition)
+  in
+    Array.toList board.tiles |> partition
 
 expose: Board -> Board
 expose board =
@@ -40,10 +42,20 @@ expose board =
   in
     {board | tiles = Array.map exposeTile board.tiles}
 
+reveal: Tile -> Board -> Board
+reveal tile board =
+  {board | tiles = Array.set tile.id {tile | isExposed = True} board.tiles}
+
+mark: Tile -> Board -> Board
+mark tile board =
+  {board | tiles = Array.set tile.id {tile | isMarked = True} board.tiles}
+
+
+-- Unexported Methods
 addMines: Int -> Array Tile -> Array Tile
 addMines numberOfMines tiles =
   let
-    bombPositionGenerator = list numberOfMines (int 0 (length tiles))
+    bombPositionGenerator = list numberOfMines (int 0 (Array.length tiles))
     (bombPositions, _) = generate bombPositionGenerator (initialSeed 101)
     insertMines: List(Int) -> Array Tile -> Array Tile
     insertMines listOfPositions tiles =
@@ -153,23 +165,3 @@ addAdjacentMineValues boardSize tiles =
         Array.filter (\tile -> List.member tile.id neighborIndexes) tiles
   in
     Array.map populateAdjacentMines tiles
-
-toGrid: Board -> List(List Tile)
-toGrid board =
-  let
-    partition: List Tile -> List(List Tile)
-    partition list =
-      if List.length list == board.size then
-        [list]
-      else
-        [List.take board.size list] ++ (List.drop board.size list |> partition)
-  in
-    Array.toList board.tiles |> partition
-
-reveal: Tile -> Board -> Board
-reveal tile board =
-  {board | tiles = Array.set tile.id {tile | isExposed = True} board.tiles}
-
-markTile: Tile -> Board -> Board
-markTile tile board =
-  {board | tiles = Array.set tile.id {tile | isMarked = True} board.tiles}

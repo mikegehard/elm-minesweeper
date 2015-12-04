@@ -1,37 +1,104 @@
-module Minesweeper (
-  Board,
-  Tile,
-  createBoard,
-  reveal,
-  toGrid,
-  expose,
-  markTile)
+module Minesweeper.Board
+  (
+    Board,
+    Action,
+    update,
+    view,
+    create
+  )
   where
 
-import Array exposing (Array, length)
+import Array exposing (Array)
+import Minesweeper.Tile exposing (Tile)
 import Random exposing (generate, initialSeed, int, list)
-import Debug
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Signal exposing (Signal, Address)
+import Effects exposing (Effects, Never)
+import Json.Decode
 
 type alias Board = {
   size: Int,
   tiles: Array Tile
 }
 
-type alias Tile = {
-  id: Int,
-  numberOfAdjacentMines: Int,
-  isMine: Bool,
-  isMarked: Bool,
-  isExposed: Bool
-}
+type Action = Click Tile | Mark Tile
 
-newTile : Int -> Tile
-newTile id = Tile id 0 False False False
+update : Action -> Board -> (Board, Effects Action)
+update action board =
+  case action of
+  Click tile ->
+    if tile.isMine then
+      (expose board, Effects.none)
+    else
+      (reveal tile board, Effects.none)
+  Mark tile ->
+      (mark tile board, Effects.none)
 
-createBoard: Int -> Int -> Board
-createBoard s numberOfMines = {
-  size = s,
-  tiles = Array.initialize (s * s) newTile |> addMines numberOfMines |> addAdjacentMineValues s }
+view : Address Action -> Board -> Html
+view address board =
+  let
+    classFor: Tile -> String
+    classFor tile =
+      if tile.isMarked then
+        "tile marked"
+      else if tile.isExposed then
+        if tile.isMine then
+          "tile exposed mine"
+        else
+          "tile exposed"
+      else
+        "tile"
+
+    displayTile: Tile -> Html
+    displayTile tile =
+      td
+      [
+        class (classFor tile),
+        onClick address (Click tile),
+        onRightClick address (Mark tile)
+      ]
+      [ tile
+        |> Minesweeper.Tile.textFor
+        |> text
+      ]
+
+    displayRow: List Tile -> Html
+    displayRow row =
+      row
+      |> List.map displayTile
+      |> tr []
+
+  in
+    toGrid board
+    |> List.map displayRow
+    |> table []
+
+create: Int -> Int -> Board
+create s numberOfMines =
+  {
+    size = s,
+    tiles =
+      Array.initialize (s * s) Minesweeper.Tile.new
+      |> addMines numberOfMines
+      |> addAdjacentMineValues
+  }
+
+-- Unexported Methods
+
+toGrid: Board -> List(List Tile)
+toGrid board =
+  let
+    partition: List Tile -> List(List Tile)
+    partition list =
+      if List.length list == board.size then
+        [list]
+      else
+        [List.take board.size list] ++ (List.drop board.size list |> partition)
+  in
+    Array.toList board.tiles
+    |> partition
 
 expose: Board -> Board
 expose board =
@@ -40,10 +107,22 @@ expose board =
   in
     {board | tiles = Array.map exposeTile board.tiles}
 
+reveal: Tile -> Board -> Board
+reveal tile board =
+  {board | tiles = Array.set tile.id {tile | isExposed = True} board.tiles}
+
+mark: Tile -> Board -> Board
+mark tile board =
+  {board | tiles = Array.set tile.id {tile | isMarked = True} board.tiles}
+
+onRightClick: Signal.Address a -> a -> Attribute
+onRightClick address message =
+  onWithOptions "contextmenu" {defaultOptions | preventDefault = True} Json.Decode.value (\_ -> Signal.message address message)
+
 addMines: Int -> Array Tile -> Array Tile
 addMines numberOfMines tiles =
   let
-    bombPositionGenerator = list numberOfMines (int 0 (length tiles))
+    bombPositionGenerator = Random.list numberOfMines (int 0 (Array.length tiles))
     (bombPositions, _) = generate bombPositionGenerator (initialSeed 101)
     insertMines: List(Int) -> Array Tile -> Array Tile
     insertMines listOfPositions tiles =
@@ -59,8 +138,8 @@ addMines numberOfMines tiles =
   in
     insertMines bombPositions tiles
 
-addAdjacentMineValues: Int -> Array Tile -> Array Tile
-addAdjacentMineValues boardSize tiles =
+addAdjacentMineValues: Array Tile -> Array Tile
+addAdjacentMineValues tiles =
   let
     populateAdjacentMines: Tile -> Tile
     populateAdjacentMines tile =
@@ -73,6 +152,12 @@ addAdjacentMineValues boardSize tiles =
     neighbors: Tile -> Array Tile
     neighbors tile =
       let
+        boardSize =
+          Array.length tiles
+          |> toFloat
+          |> sqrt
+          |> round
+
         isNWCorner tile = tile.id == 0
         isNECorner tile = tile.id == boardSize - 1
         isSWCorner tile = tile.id == (boardSize - 1) * boardSize
@@ -144,7 +229,8 @@ addAdjacentMineValues boardSize tiles =
               tile.id - boardSize - 1,
               tile.id - boardSize,
               tile.id - boardSize + 1,
-              tile.id - 1, tile.id + 1,
+              tile.id - 1,
+              tile.id + 1,
               tile.id + boardSize - 1,
               tile.id + boardSize,
               tile.id + boardSize + 1
@@ -153,23 +239,3 @@ addAdjacentMineValues boardSize tiles =
         Array.filter (\tile -> List.member tile.id neighborIndexes) tiles
   in
     Array.map populateAdjacentMines tiles
-
-toGrid: Board -> List(List Tile)
-toGrid board =
-  let
-    partition: List Tile -> List(List Tile)
-    partition list =
-      if List.length list == board.size then
-        [list]
-      else
-        [List.take board.size list] ++ (List.drop board.size list |> partition)
-  in
-    Array.toList board.tiles |> partition
-
-reveal: Tile -> Board -> Board
-reveal tile board =
-  {board | tiles = Array.set tile.id {tile | isExposed = True} board.tiles}
-
-markTile: Tile -> Board -> Board
-markTile tile board =
-  {board | tiles = Array.set tile.id {tile | isMarked = True} board.tiles}

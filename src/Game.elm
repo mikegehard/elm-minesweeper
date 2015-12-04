@@ -1,6 +1,6 @@
 module Game where
 
-import Minesweeper
+import Minesweeper.Board exposing (Board)
 
 type Difficulty = Beginner | Intermediate | Advanced
 
@@ -16,12 +16,12 @@ translateDifficulty optionValue =
     "Advanced" -> Advanced
     _ -> Beginner
 
-boardFor: Difficulty -> Minesweeper.Board
+boardFor: Difficulty -> Minesweeper.Board.Board
 boardFor difficulty =
   case difficulty of
     Beginner ->
-      Minesweeper.createBoard 9 10
+      Minesweeper.Board.create 9 10
     Intermediate ->
-      Minesweeper.createBoard 16 40
+      Minesweeper.Board.create 16 40
     Advanced ->
-      Minesweeper.createBoard 22 99
+      Minesweeper.Board.create 22 99

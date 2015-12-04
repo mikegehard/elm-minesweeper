@@ -30,7 +30,7 @@ type alias Model = {
 
 initialModel = Game.initial
 
-type Action = NoOp | Select Difficulty | Click Tile | Mark Tile
+type Action = NoOp | Select Difficulty | UpdateBoard Minesweeper.Board.Action
 
 init : (Model, Effects Action)
 init = (initialModel, Effects.none)
@@ -41,52 +41,23 @@ update action model =
     NoOp -> (model, Effects.none)
     Select difficulty ->
       ({model | board = Just(Game.boardFor difficulty)}, Effects.none)
-    Click tile ->
+    UpdateBoard action ->
       case model.board of
         Just board ->
-          if tile.isMine then
-            ({model | board = Just(Minesweeper.Board.expose board), outcome = Just Game.Lost}, Effects.none)
-          else
-            ({model | board = Just(Minesweeper.Board.reveal tile board)}, Effects.none)
-        Nothing -> (model, Effects.none)
-    Mark tile ->
-      case model.board of
-        Just board -> ({model | board = Just(Minesweeper.Board.mark tile board)}, Effects.none)
-        Nothing -> (model, Effects.none)
+          let
+            (board, effects) = Minesweeper.Board.update action board
+          in
+            ({model | board = Just board}, Effects.map UpdateBoard effects)
+        Nothing ->
+          (model, Effects.none)
 
 view : Address Action -> Model -> Html
 view address model =
   let
-    classFor: Tile -> String
-    classFor tile =
-      if tile.isMarked then
-        "tile marked"
-      else if tile.isExposed then
-        if tile.isMine then
-          "tile exposed mine"
-        else
-          "tile exposed"
-      else
-        "tile"
-
-    displayTile: Tile -> Html
-    displayTile tile =
-      td
-      [
-        class (classFor tile),
-        onClick address (Click tile),
-        onRightClick address (Mark tile)
-      ]
-      [ tile |> Minesweeper.Tile.textFor |> text]
-
-    displayRow: List Tile -> Html
-    displayRow row = row |> List.map displayTile |> tr []
-
-    displayBoard: Maybe Board -> Maybe Html
-    displayBoard board = board |> Maybe.map (\board -> Minesweeper.Board.toGrid board |> List.map displayRow |> table [])
-
     controlsHtml = div [class "controls"]
       [
+        -- This use of << is a bit magical
+        -- TODO: Take a look at how it works.
         select [on "change" targetValue (Signal.message address << Select << translateDifficulty)]
         [
           option [] [text "Select a difficulty..."],
@@ -101,11 +72,10 @@ view address model =
 
     outcomeHtml = model.outcome |> Maybe.map toHtml |> Maybe.withDefault (text "")
 
-    boardHtml = displayBoard model.board
+    -- This forwardTo stuff is still a bit magical.
+    -- TODO: look closer at it.
+    boardHtml = model.board |> Maybe.map (Minesweeper.Board.view (Signal.forwardTo address UpdateBoard))
 
-    htmlElements = [ boardHtml |> Maybe.withDefault controlsHtml ] ++ [outcomeHtml]
+    htmlElements = Maybe.withDefault controlsHtml boardHtml :: [outcomeHtml]
   in
     div [] htmlElements
-
-onRightClick: Signal.Address a -> a -> Attribute
-onRightClick address message = onWithOptions "contextmenu" {defaultOptions | preventDefault = True} Json.Decode.value (\_ -> Signal.message address message)

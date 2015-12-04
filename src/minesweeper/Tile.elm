@@ -5,6 +5,9 @@ type alias Tile = {
   numberOfAdjacentMines: Int,
   isMine: Bool,
   isMarked: Bool,
+
+
+
   isExposed: Bool
 }
 

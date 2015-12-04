@@ -59,13 +59,21 @@ view address board =
         onClick address (Click tile),
         onRightClick address (Mark tile)
       ]
-      [ tile |> Minesweeper.Tile.textFor |> text]
+      [ tile
+        |> Minesweeper.Tile.textFor
+        |> text
+      ]
 
     displayRow: List Tile -> Html
-    displayRow row = row |> List.map displayTile |> tr []
+    displayRow row =
+      row
+      |> List.map displayTile
+      |> tr []
 
   in
-    toGrid board |> List.map displayRow |> table []
+    toGrid board
+    |> List.map displayRow
+    |> table []
 
 create: Int -> Int -> Board
 create s numberOfMines =
@@ -89,7 +97,8 @@ toGrid board =
       else
         [List.take board.size list] ++ (List.drop board.size list |> partition)
   in
-    Array.toList board.tiles |> partition
+    Array.toList board.tiles
+    |> partition
 
 expose: Board -> Board
 expose board =
@@ -107,7 +116,8 @@ mark tile board =
   {board | tiles = Array.set tile.id {tile | isMarked = True} board.tiles}
 
 onRightClick: Signal.Address a -> a -> Attribute
-onRightClick address message = onWithOptions "contextmenu" {defaultOptions | preventDefault = True} Json.Decode.value (\_ -> Signal.message address message)
+onRightClick address message =
+  onWithOptions "contextmenu" {defaultOptions | preventDefault = True} Json.Decode.value (\_ -> Signal.message address message)
 
 addMines: Int -> Array Tile -> Array Tile
 addMines numberOfMines tiles =

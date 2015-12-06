@@ -14,8 +14,8 @@ import Random exposing (generate, initialSeed, int, list)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Signal exposing (Signal, Address)
-import Effects exposing (Effects, Never)
+import Signal exposing (Address)
+import Effects exposing (Effects)
 import Json.Decode
 
 type alias Model = {

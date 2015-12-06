@@ -1,6 +1,6 @@
 module Minesweeper.Board
   (
-    Board,
+    Model,
     Action,
     update,
     view,
@@ -18,14 +18,14 @@ import Signal exposing (Signal, Address)
 import Effects exposing (Effects, Never)
 import Json.Decode
 
-type alias Board = {
+type alias Model = {
   size: Int,
   tiles: Array Tile
 }
 
 type Action = Click Tile | Mark Tile
 
-update : Action -> Board -> (Board, Effects Action)
+update : Action -> Model -> (Model, Effects Action)
 update action board =
   case action of
   Click tile ->
@@ -36,7 +36,7 @@ update action board =
   Mark tile ->
       (mark tile board, Effects.none)
 
-view : Address Action -> Board -> Html
+view : Address Action -> Model -> Html
 view address board =
   let
     classFor: Tile -> String
@@ -75,7 +75,7 @@ view address board =
     |> List.map displayRow
     |> table []
 
-create: Int -> Int -> Board
+create: Int -> Int -> Model
 create s numberOfMines =
   {
     size = s,
@@ -87,7 +87,7 @@ create s numberOfMines =
 
 -- Unexported Methods
 
-toGrid: Board -> List(List Tile)
+toGrid: Model -> List(List Tile)
 toGrid board =
   let
     partition: List Tile -> List(List Tile)
@@ -100,18 +100,18 @@ toGrid board =
     Array.toList board.tiles
     |> partition
 
-expose: Board -> Board
+expose: Model -> Model
 expose board =
   let
     exposeTile tile = {tile | isExposed = True}
   in
     {board | tiles = Array.map exposeTile board.tiles}
 
-reveal: Tile -> Board -> Board
+reveal: Tile -> Model -> Model
 reveal tile board =
   {board | tiles = Array.set tile.id {tile | isExposed = True} board.tiles}
 
-mark: Tile -> Board -> Board
+mark: Tile -> Model -> Model
 mark tile board =
   {board | tiles = Array.set tile.id {tile | isMarked = True} board.tiles}
 

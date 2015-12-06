@@ -1,6 +1,6 @@
 module Game where
 
-import Minesweeper.Board exposing (Board)
+import Minesweeper.Board exposing (Model)
 
 type Difficulty = Beginner | Intermediate | Advanced
 
@@ -16,7 +16,7 @@ translateDifficulty optionValue =
     "Advanced" -> Advanced
     _ -> Beginner
 
-boardFor: Difficulty -> Minesweeper.Board.Board
+boardFor: Difficulty -> Minesweeper.Board.Model
 boardFor difficulty =
   case difficulty of
     Beginner ->

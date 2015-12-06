@@ -7,7 +7,7 @@ import Effects exposing (Effects, Never)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Minesweeper.Board exposing (Board)
+import Minesweeper.Board
 import Minesweeper.Tile exposing (Tile)
 import Game exposing (Outcome, Difficulty, translateDifficulty)
 import Json.Decode
@@ -25,7 +25,7 @@ port tasks =
 
 type alias Model = {
   outcome: Maybe Outcome,
-  board: Maybe Board
+  board: Maybe Minesweeper.Board.Model
 }
 
 initialModel = Game.initial

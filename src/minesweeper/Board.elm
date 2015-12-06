@@ -39,23 +39,11 @@ update action board =
 view : Address Action -> Model -> Html
 view address board =
   let
-    classFor: Tile -> String
-    classFor tile =
-      if tile.isMarked then
-        "tile marked"
-      else if tile.isExposed then
-        if tile.isMine then
-          "tile exposed mine"
-        else
-          "tile exposed"
-      else
-        "tile"
-
     displayTile: Tile -> Html
     displayTile tile =
       td
       [
-        class (classFor tile),
+        class (Minesweeper.Tile.classFor tile),
         onClick address (Click tile),
         onRightClick address (Mark tile)
       ]

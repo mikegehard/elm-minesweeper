@@ -5,9 +5,6 @@ type alias Tile = {
   numberOfAdjacentMines: Int,
   isMine: Bool,
   isMarked: Bool,
-
-
-
   isExposed: Bool
 }
 
@@ -20,3 +17,15 @@ textFor tile =
      toString tile.numberOfAdjacentMines
   else
     ""
+
+classFor: Tile -> String
+classFor tile =
+  if tile.isMarked then
+    "tile marked"
+  else if tile.isExposed then
+    if tile.isMine then
+      "tile exposed mine"
+    else
+      "tile exposed"
+  else
+    "tile"

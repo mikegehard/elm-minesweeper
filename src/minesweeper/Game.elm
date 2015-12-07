@@ -56,7 +56,7 @@ view address model =
     -- TODO: look closer at it.
     boardHtml = model.board |> Maybe.map (Minesweeper.Board.view (Signal.forwardTo address UpdateBoard))
 
-    htmlElements = Maybe.withDefault controlsHtml boardHtml :: [outcomeHtml]
+    htmlElements = [Maybe.withDefault controlsHtml boardHtml, outcomeHtml]
   in
     div [] htmlElements
 

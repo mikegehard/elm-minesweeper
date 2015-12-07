@@ -8,6 +8,7 @@ import Effects exposing (Effects)
 import Minesweeper.Board
 
 type alias Model = {
+  startTime: Int,
   outcome: Maybe Outcome,
   board: Maybe Minesweeper.Board.Model
 }
@@ -19,7 +20,7 @@ update action model =
   case action of
     NoOp -> (model, Effects.none)
     Select difficulty ->
-      ({model | board = Just(boardFor difficulty)}, Effects.none)
+      ({model | board = Just(boardFor difficulty model.startTime)}, Effects.none)
     UpdateBoard action ->
       case model.board of
         Just board ->
@@ -63,7 +64,13 @@ type Difficulty = Beginner | Intermediate | Advanced
 
 type Outcome = Lost
 
-initial = { board = Nothing, outcome = Nothing }
+initial: Int -> Model
+initial startTime =
+  {
+    startTime = startTime,
+    board = Nothing,
+    outcome = Nothing
+  }
 
 translateDifficulty: String -> Difficulty
 translateDifficulty optionValue =
@@ -73,12 +80,12 @@ translateDifficulty optionValue =
     "Advanced" -> Advanced
     _ -> Beginner
 
-boardFor: Difficulty -> Minesweeper.Board.Model
-boardFor difficulty =
+boardFor: Difficulty -> Int -> Minesweeper.Board.Model
+boardFor difficulty randomSeed =
   case difficulty of
     Beginner ->
-      Minesweeper.Board.create 9 10
+      Minesweeper.Board.create 9 10 randomSeed
     Intermediate ->
-      Minesweeper.Board.create 16 40
+      Minesweeper.Board.create 16 40 randomSeed
     Advanced ->
-      Minesweeper.Board.create 22 99
+      Minesweeper.Board.create 22 99 randomSeed

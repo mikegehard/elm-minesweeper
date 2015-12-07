@@ -63,13 +63,13 @@ view address board =
     |> List.map displayRow
     |> table []
 
-create: Int -> Int -> Model
-create s numberOfMines =
+create: Int -> Int -> Int -> Model
+create s numberOfMines randomSeed =
   {
     size = s,
     tiles =
       Array.initialize (s * s) Minesweeper.Tile.new
-      |> addMines numberOfMines
+      |> addMines randomSeed numberOfMines
       |> addAdjacentMineValues
   }
 
@@ -107,11 +107,11 @@ onRightClick: Signal.Address a -> a -> Attribute
 onRightClick address message =
   onWithOptions "contextmenu" {defaultOptions | preventDefault = True} Json.Decode.value (\_ -> Signal.message address message)
 
-addMines: Int -> Array Tile -> Array Tile
-addMines numberOfMines tiles =
+addMines: Int -> Int -> Array Tile -> Array Tile
+addMines randomSeed numberOfMines tiles =
   let
     bombPositionGenerator = Random.list numberOfMines (int 0 (Array.length tiles))
-    (bombPositions, _) = generate bombPositionGenerator (initialSeed 101)
+    (bombPositions, _) = generate bombPositionGenerator (initialSeed randomSeed)
     insertMines: List(Int) -> Array Tile -> Array Tile
     insertMines listOfPositions tiles =
       case listOfPositions of

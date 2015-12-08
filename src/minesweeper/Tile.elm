@@ -20,12 +20,23 @@ textFor tile =
 
 classFor: Tile -> String
 classFor tile =
-  if tile.isMarked then
-    "tile marked"
-  else if tile.isExposed then
-    if tile.isMine then
-      "tile exposed mine"
-    else
-      "tile exposed"
-  else
-    "tile"
+  let
+    addMarked tile class =
+      if tile.isMarked then
+        class ++ " marked"
+      else
+        class
+
+    addMine tile class =
+      if tile.isMine then
+        class ++ " mine"
+      else
+        class
+
+    addExposed tile class =
+      if tile.isExposed then
+        class ++ " exposed"
+      else
+        class
+  in
+    "tile" |> addMarked tile |> addMine tile |> addExposed tile

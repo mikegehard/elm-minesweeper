@@ -20,7 +20,8 @@ import Json.Decode
 
 type alias Model = {
   size: Int,
-  tiles: Array Tile
+  tiles: Array Tile,
+  hitMine: Bool
 }
 
 type Action = Click Tile | Mark Tile
@@ -30,7 +31,10 @@ update action board =
   case action of
   Click tile ->
     if tile.isMine then
-      (expose board, Effects.none)
+      let
+        exposedBoard = expose board
+      in
+        ({exposedBoard | hitMine = True}, Effects.none)
     else
       (reveal tile board, Effects.none)
   Mark tile ->
@@ -66,6 +70,7 @@ view address board =
 create: Int -> Int -> Int -> Model
 create s numberOfMines randomSeed =
   {
+    hitMine = False,
     size = s,
     tiles =
       Array.initialize (s * s) Minesweeper.Tile.new

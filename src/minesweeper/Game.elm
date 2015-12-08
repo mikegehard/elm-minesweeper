@@ -26,8 +26,13 @@ update action model =
         Just board ->
           let
             (board, effects) = Minesweeper.Board.update action board
+            updatedModel =
+              if board.hitMine then
+                {model | board = Just board, outcome = Just Lost}
+              else
+                {model | board = Just board}
           in
-            ({model | board = Just board}, Effects.map UpdateBoard effects)
+            (updatedModel, Effects.map UpdateBoard effects)
         Nothing ->
           (model, Effects.none)
 

@@ -41,9 +41,10 @@ view address model =
   let
     controlsHtml = div [class "controls"]
       [
-        -- This use of << is a bit magical
-        -- TODO: Take a look at how it works.
-        select [on "change" targetValue (Signal.message address << Select << translateDifficulty)]
+        -- << and >> are function composition operators
+        -- The next two lines are identical.
+        select [on "change" targetValue (translateDifficulty >> Select >> Signal.message address)]
+        -- select [on "change" targetValue (Signal.message address << Select << translateDifficulty)]
         [
           option [] [text "Select a difficulty..."],
           option [] [text "Beginner"],

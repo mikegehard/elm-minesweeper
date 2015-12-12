@@ -11,6 +11,14 @@ type alias Tile = {
 new : Int -> Tile
 new id = Tile id 0 False False False
 
+expose: Tile -> Tile
+expose tile =
+  {tile | isExposed = True}
+
+mark: Tile -> Tile
+mark tile =
+  {tile | isMarked = True}
+
 textFor: Tile -> String
 textFor tile =
   if tile.isExposed && not tile.isMine then

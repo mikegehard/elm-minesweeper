@@ -30,7 +30,10 @@ update action model =
               if board.hitMine then
                 {model | board = Just board, outcome = Just Lost}
               else
-                {model | board = Just board}
+                if (Debug.log "Board" board.isFullyExposed) then
+                  {model | board = Just board, outcome = Just Won}
+                else
+                  {model | board = Just board}
           in
             (updatedModel, Effects.map UpdateBoard effects)
         Nothing ->
@@ -66,7 +69,7 @@ view address model =
 
 type Difficulty = Beginner | Intermediate | Advanced
 
-type Outcome = Lost
+type Outcome = Lost | Won
 
 initial: Int -> Model
 initial startTime =

@@ -1,12 +1,4 @@
-module Minesweeper.Board
-  (
-    Model,
-    Action,
-    update,
-    view,
-    create
-  )
-  where
+module Minesweeper.Board where
 
 import Array exposing (Array)
 import Minesweeper.Tile exposing (Tile)
@@ -21,7 +13,8 @@ import Json.Decode
 type alias Model = {
   size: Int,
   tiles: Array Tile,
-  hitMine: Bool
+  hitMine: Bool,
+  isFullyExposed: Bool
 }
 
 type Action = Click Tile | Mark Tile
@@ -36,7 +29,10 @@ update action board =
       in
         ({exposedBoard | hitMine = True}, Effects.none)
     else
-      (reveal tile board, Effects.none)
+      let
+        updatedBoard = reveal tile board
+      in
+        ({updatedBoard | isFullyExposed = determineIfFullyExposed updatedBoard}, Effects.none)
   Mark tile ->
       (mark tile board, Effects.none)
 
@@ -71,6 +67,7 @@ create: Int -> Int -> Int -> Model
 create s numberOfMines randomSeed =
   {
     hitMine = False,
+    isFullyExposed = False,
     size = s,
     tiles =
       Array.initialize (s * s) Minesweeper.Tile.new
@@ -103,6 +100,10 @@ expose board =
 reveal: Tile -> Model -> Model
 reveal tile board =
   {board | tiles = Array.set tile.id {tile | isExposed = True} board.tiles}
+
+determineIfFullyExposed: Model -> Bool
+determineIfFullyExposed board =
+  List.all (\tile -> tile.isExposed || tile.isMarked) (Array.toList board.tiles)
 
 mark: Tile -> Model -> Model
 mark tile board =

@@ -75,8 +75,6 @@ create s numberOfMines randomSeed =
       |> addAdjacentMineValues
   }
 
--- Unexported Methods
-
 toGrid: Model -> List(List Tile)
 toGrid board =
   let

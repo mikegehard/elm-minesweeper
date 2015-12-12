@@ -58,8 +58,6 @@ view address model =
 
     outcomeHtml = model.outcome |> Maybe.map toHtml |> Maybe.withDefault (text "")
 
-    -- This forwardTo stuff is still a bit magical.
-    -- TODO: look closer at it.
     boardHtml = model.board |> Maybe.map (Minesweeper.Board.view (Signal.forwardTo address UpdateBoard))
 
     htmlElements = [Maybe.withDefault controlsHtml boardHtml, outcomeHtml]

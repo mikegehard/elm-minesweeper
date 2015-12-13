@@ -77,6 +77,10 @@ create s numberOfMines randomSeed =
       |> Array.toList
   }
 
+determineIfFullyExposed: Model -> Bool
+determineIfFullyExposed board =
+  List.all (\tile -> tile.isExposed || tile.isMarked) board.tiles
+
 toGrid: Model -> List(List Tile)
 toGrid board =
   let
@@ -95,15 +99,15 @@ exposeAll board =
 
 expose: Int -> Model -> Model
 expose tileId board =
-  {board | tiles = List.map (\t -> if t.id == tileId then Tile.expose t else t) board.tiles}
-
-determineIfFullyExposed: Model -> Bool
-determineIfFullyExposed board =
-  List.all (\tile -> tile.isExposed || tile.isMarked) board.tiles
+  {board | tiles = updateMatchingTile tileId Tile.expose board.tiles}
 
 mark: Int -> Model -> Model
 mark tileId board =
-  {board | tiles = List.map (\t -> if t.id == tileId then Tile.mark t else t) board.tiles}
+  {board | tiles = updateMatchingTile tileId Tile.mark board.tiles}
+
+updateMatchingTile: Int -> (Tile -> Tile) -> List Tile -> List Tile
+updateMatchingTile id update tiles =
+  List.map (\t -> if t.id == id then update t else t) tiles
 
 onRightClick: Signal.Address a -> a -> Attribute
 onRightClick address message =

@@ -30,7 +30,7 @@ update action model =
               if board.hitMine then
                 {model | board = Just board, outcome = Just Lost}
               else
-                if (Debug.log "Board" board.isFullyExposed) then
+                if board.isFullyExposed then
                   {model | board = Just board, outcome = Just Won}
                 else
                   {model | board = Just board}

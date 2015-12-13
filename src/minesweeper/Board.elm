@@ -9,10 +9,11 @@ import Html.Events exposing (..)
 import Signal exposing (Address)
 import Effects exposing (Effects)
 import Json.Decode
+import Minesweeper.Tile as Tile
 
 type alias Model = {
   size: Int,
-  tiles: Array Tile,
+  tiles: List Tile,
   hitMine: Bool,
   isFullyExposed: Bool
 }
@@ -25,16 +26,16 @@ update action board =
   Click tile ->
     if tile.isMine then
       let
-        exposedBoard = expose board
+        exposedBoard = exposeAll board
       in
         ({exposedBoard | hitMine = True}, Effects.none)
     else
       let
-        updatedBoard = reveal tile board
+        updatedBoard = expose tile.id board
       in
         ({updatedBoard | isFullyExposed = determineIfFullyExposed updatedBoard}, Effects.none)
   Mark tile ->
-      (mark tile board, Effects.none)
+      (mark tile.id board, Effects.none)
 
 view : Address Action -> Model -> Html
 view address board =
@@ -73,6 +74,7 @@ create s numberOfMines randomSeed =
       Array.initialize (s * s) Minesweeper.Tile.new
       |> addMines randomSeed numberOfMines
       |> addAdjacentMineValues
+      |> Array.toList
   }
 
 toGrid: Model -> List(List Tile)
@@ -85,27 +87,23 @@ toGrid board =
       else
         [List.take board.size list] ++ (List.drop board.size list |> partition)
   in
-    Array.toList board.tiles
-    |> partition
+    partition board.tiles
 
-expose: Model -> Model
-expose board =
-  let
-    exposeTile tile = {tile | isExposed = True}
-  in
-    {board | tiles = Array.map exposeTile board.tiles}
+exposeAll: Model -> Model
+exposeAll board =
+  {board | tiles = List.map Tile.expose board.tiles}
 
-reveal: Tile -> Model -> Model
-reveal tile board =
-  {board | tiles = Array.set tile.id {tile | isExposed = True} board.tiles}
+expose: Int -> Model -> Model
+expose tileId board =
+  {board | tiles = List.map (\t -> if t.id == tileId then Tile.expose t else t) board.tiles}
 
 determineIfFullyExposed: Model -> Bool
 determineIfFullyExposed board =
-  List.all (\tile -> tile.isExposed || tile.isMarked) (Array.toList board.tiles)
+  List.all (\tile -> tile.isExposed || tile.isMarked) board.tiles
 
-mark: Tile -> Model -> Model
-mark tile board =
-  {board | tiles = Array.set tile.id {tile | isMarked = True} board.tiles}
+mark: Int -> Model -> Model
+mark tileId board =
+  {board | tiles = List.map (\t -> if t.id == tileId then Tile.mark t else t) board.tiles}
 
 onRightClick: Signal.Address a -> a -> Attribute
 onRightClick address message =

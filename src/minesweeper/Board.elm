@@ -25,15 +25,12 @@ update action board =
   case action of
   Click tile ->
     if tile.isMine then
-      let
-        exposedBoard = exposeAll board
-      in
-        ({exposedBoard | hitMine = True}, Effects.none)
+      ({board | tiles = exposeAll board.tiles, hitMine = True}, Effects.none)
     else
       let
-        updatedBoard = expose tile.id board
+        updatedTiles = expose tile.id board.tiles
       in
-        ({updatedBoard | isFullyExposed = determineIfFullyExposed updatedBoard}, Effects.none)
+        ({board | tiles = updatedTiles, isFullyExposed = determineIfFullyExposed updatedTiles}, Effects.none)
   Mark tile ->
       (mark tile.id board, Effects.none)
 
@@ -73,13 +70,20 @@ create s numberOfMines randomSeed =
     tiles =
       Array.initialize (s * s) Minesweeper.Tile.new
       |> addMines randomSeed numberOfMines
-      |> addAdjacentMineValues
       |> Array.toList
+      |> addAdjacentMineValues
   }
 
-determineIfFullyExposed: Model -> Bool
-determineIfFullyExposed board =
-  List.all (\tile -> tile.isExposed || tile.isMarked) board.tiles
+size: List Tile -> Int
+size tiles =
+  List.length tiles
+  |> toFloat
+  |> sqrt
+  |> round
+
+determineIfFullyExposed: List Tile -> Bool
+determineIfFullyExposed tiles =
+  List.all (\tile -> tile.isExposed || tile.isMarked) tiles
 
 toGrid: Model -> List(List Tile)
 toGrid board =
@@ -93,13 +97,13 @@ toGrid board =
   in
     partition board.tiles
 
-exposeAll: Model -> Model
-exposeAll board =
-  {board | tiles = List.map Tile.expose board.tiles}
+exposeAll: List Tile -> List Tile
+exposeAll tiles =
+  List.map Tile.expose tiles
 
-expose: Int -> Model -> Model
-expose tileId board =
-  {board | tiles = updateMatchingTile tileId Tile.expose board.tiles}
+expose: Int -> List Tile -> List Tile
+expose tileId tiles =
+  updateMatchingTile tileId Tile.expose tiles
 
 mark: Int -> Model -> Model
 mark tileId board =
@@ -132,7 +136,7 @@ addMines randomSeed numberOfMines tiles =
   in
     insertMines bombPositions tiles
 
-addAdjacentMineValues: Array Tile -> Array Tile
+addAdjacentMineValues: List Tile -> List Tile
 addAdjacentMineValues tiles =
   let
     populateAdjacentMines: Tile -> Tile
@@ -141,95 +145,91 @@ addAdjacentMineValues tiles =
 
     calculateNeighboringMines: Tile -> Int
     calculateNeighboringMines tile =
-      neighbors tile |> Array.filter .isMine  |> Array.length
-
-    neighbors: Tile -> Array Tile
-    neighbors tile =
-      let
-        boardSize =
-          Array.length tiles
-          |> toFloat
-          |> sqrt
-          |> round
-
-        isNWCorner tile = tile.id == 0
-        isNECorner tile = tile.id == boardSize - 1
-        isSWCorner tile = tile.id == (boardSize - 1) * boardSize
-        isSECorner tile = tile.id == (boardSize * boardSize) - 1
-        isTopRow tile = tile.id // boardSize == 0
-        isBottomRow tile = tile.id // boardSize == boardSize - 1
-        isLeftMostRow tile= tile.id `rem` boardSize == 0
-        isRightMostRow tile = tile.id `rem` boardSize == boardSize - 1
-
-        neighborIndexes =
-          if isNWCorner tile then
-            [
-              tile.id + 1,
-              tile.id + boardSize,
-              tile.id + boardSize + 1
-            ]
-          else if isNECorner tile then
-            [
-              tile.id - 1,
-              tile.id + boardSize,
-              tile.id + boardSize + 1
-            ]
-          else if isSWCorner tile then
-            [
-              tile.id - boardSize,
-              tile.id - boardSize + 1,
-              tile.id + 1
-            ]
-          else if isSECorner tile then
-            [
-              tile.id - boardSize - 1,
-              tile.id - boardSize,
-              tile.id - 1
-            ]
-          else if isTopRow tile then
-            [
-              tile.id - 1,
-              tile.id + 1,
-              tile.id + boardSize - 1,
-              tile.id + boardSize,
-              tile.id + boardSize + 1
-            ]
-          else if isBottomRow tile then
-            [
-              tile.id - boardSize - 1,
-              tile.id - boardSize,
-              tile.id - boardSize + 1,
-              tile.id - 1,
-              tile.id + 1
-            ]
-          else if isLeftMostRow tile then
-            [
-              tile.id - boardSize,
-              tile.id - boardSize + 1,
-              tile.id + 1,
-              tile.id + boardSize,
-              tile.id + boardSize + 1
-            ]
-          else if isRightMostRow tile then
-            [
-              tile.id - boardSize - 1,
-              tile.id - boardSize,
-              tile.id - 1,
-              tile.id + boardSize - 1,
-              tile.id + boardSize
-            ]
-          else
-            [
-              tile.id - boardSize - 1,
-              tile.id - boardSize,
-              tile.id - boardSize + 1,
-              tile.id - 1,
-              tile.id + 1,
-              tile.id + boardSize - 1,
-              tile.id + boardSize,
-              tile.id + boardSize + 1
-            ]
-      in
-        Array.filter (\tile -> List.member tile.id neighborIndexes) tiles
+      neighbors tile tiles |> List.filter .isMine  |> List.length
   in
-    Array.map populateAdjacentMines tiles
+    List.map populateAdjacentMines tiles
+
+neighbors: Tile -> List Tile -> List Tile
+neighbors tile tiles =
+  let
+    boardSize = size tiles
+
+    isNWCorner tile = tile.id == 0
+    isNECorner tile = tile.id == boardSize - 1
+    isSWCorner tile = tile.id == (boardSize - 1) * boardSize
+    isSECorner tile = tile.id == (boardSize * boardSize) - 1
+    isTopRow tile = tile.id // boardSize == 0
+    isBottomRow tile = tile.id // boardSize == boardSize - 1
+    isLeftMostRow tile= tile.id `rem` boardSize == 0
+    isRightMostRow tile = tile.id `rem` boardSize == boardSize - 1
+
+    neighborIndexes =
+      if isNWCorner tile then
+        [
+          tile.id + 1,
+          tile.id + boardSize,
+          tile.id + boardSize + 1
+        ]
+      else if isNECorner tile then
+        [
+          tile.id - 1,
+          tile.id + boardSize,
+          tile.id + boardSize + 1
+        ]
+      else if isSWCorner tile then
+        [
+          tile.id - boardSize,
+          tile.id - boardSize + 1,
+          tile.id + 1
+        ]
+      else if isSECorner tile then
+        [
+          tile.id - boardSize - 1,
+          tile.id - boardSize,
+          tile.id - 1
+        ]
+      else if isTopRow tile then
+        [
+          tile.id - 1,
+          tile.id + 1,
+          tile.id + boardSize - 1,
+          tile.id + boardSize,
+          tile.id + boardSize + 1
+        ]
+      else if isBottomRow tile then
+        [
+          tile.id - boardSize - 1,
+          tile.id - boardSize,
+          tile.id - boardSize + 1,
+          tile.id - 1,
+          tile.id + 1
+        ]
+      else if isLeftMostRow tile then
+        [
+          tile.id - boardSize,
+          tile.id - boardSize + 1,
+          tile.id + 1,
+          tile.id + boardSize,
+          tile.id + boardSize + 1
+        ]
+      else if isRightMostRow tile then
+        [
+          tile.id - boardSize - 1,
+          tile.id - boardSize,
+          tile.id - 1,
+          tile.id + boardSize - 1,
+          tile.id + boardSize
+        ]
+      else
+        [
+          tile.id - boardSize - 1,
+          tile.id - boardSize,
+          tile.id - boardSize + 1,
+          tile.id - 1,
+          tile.id + 1,
+          tile.id + boardSize - 1,
+          tile.id + boardSize,
+          tile.id + boardSize + 1
+        ]
+  in
+    List.filter (\tile -> List.member tile.id neighborIndexes) tiles

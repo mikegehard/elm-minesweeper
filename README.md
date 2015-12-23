@@ -11,6 +11,7 @@ rebuild the app when a .elm file changes.
 ## Building
 ```
 $ elm package install
+$ npm install -g elm-test
 $ ./build
 ```
 
